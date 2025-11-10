@@ -1,8 +1,13 @@
 package ro.pub.cs.systems.eim.practicaltest01var04
 
 import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -10,12 +15,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.CheckBox
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 
 class PracticalTest01Var04MainActivity : AppCompatActivity() {
     private lateinit var input1: EditText
     private lateinit var input2: EditText
     private lateinit var uneditable: TextView
     private lateinit var bottomText: String
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val message = intent?.getStringExtra("MESAJ")
+            Log.d("MainActivityReceiver", "Mesaj de broadcast primit: $message")
+        }
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +78,13 @@ class PracticalTest01Var04MainActivity : AppCompatActivity() {
             }
 
             uneditable.text = bottomText
+
+            if (input1Text.isNotEmpty() && input2Text.isNotEmpty()) {
+                val serviceIntent = Intent(this, PracticalTest01Var04Service::class.java)
+                serviceIntent.putExtra("Nume", input1.text.toString())
+                serviceIntent.putExtra("Grupa", input2.text.toString())
+                startService(serviceIntent)
+            }
         }
 
     }
@@ -79,5 +99,22 @@ class PracticalTest01Var04MainActivity : AppCompatActivity() {
         super.onRestoreInstanceState(savedInstanceState)
         input1.setText(savedInstanceState.getString("input1"))
         input2.setText(savedInstanceState.getString("input2"))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onResume() {
+        super.onResume()
+        registerReceiver(broadcastReceiver, IntentFilter("ProcessingThread"), Context.RECEIVER_EXPORTED)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(broadcastReceiver)
+    }
+
+    override fun onDestroy() {
+        val intent = Intent(applicationContext, PracticalTest01Var04Service::class.java)
+        applicationContext.stopService(intent)
+        super.onDestroy()
     }
 }

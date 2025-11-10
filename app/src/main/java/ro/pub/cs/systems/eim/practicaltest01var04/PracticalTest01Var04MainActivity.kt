@@ -1,5 +1,7 @@
 package ro.pub.cs.systems.eim.practicaltest01var04
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -7,12 +9,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.CheckBox
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 
 class PracticalTest01Var04MainActivity : AppCompatActivity() {
     private lateinit var input1: EditText
     private lateinit var input2: EditText
     private lateinit var uneditable: TextView
-
     private lateinit var bottomText: String
 
 
@@ -24,6 +26,23 @@ class PracticalTest01Var04MainActivity : AppCompatActivity() {
         input2 = findViewById(R.id.input2)
         uneditable = findViewById(R.id.uneditable)
         bottomText = ""
+
+        val activityResultsLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                Toast.makeText(this, "The activity returned with result OK", Toast.LENGTH_LONG).show()
+            }
+            else if (result.resultCode == Activity.RESULT_CANCELED) {
+                Toast.makeText(this, "The activity returned with result CANCELED", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        val navigateButton = findViewById<Button>(R.id.navigate_to_second_activity)
+        navigateButton.setOnClickListener {
+            val intent = Intent(this, PracticalTest01Var04SecondaryActivity::class.java)
+            intent.putExtra("Nume", input1.text.toString())
+            intent.putExtra("Grupa", input2.text.toString())
+            activityResultsLauncher.launch(intent)
+        }
 
         val displayButton = findViewById<Button>(R.id.set_button)
         displayButton.setOnClickListener {
